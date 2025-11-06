@@ -1,0 +1,9 @@
+.login-page{display:flex;align-items:center;justify-content:center;height:80vh;font-family:Arial,Helvetica,sans-serif}
+.login-card{width:360px;padding:20px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.12);background:#fff}
+.role-toggle{display:flex;gap:8px;margin-bottom:12px}
+.role-toggle button{flex:1;padding:8px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer}
+.role-toggle button.active{background:#0b74ff;color:#fff;border-color:#0b74ff}
+label{display:block;margin-bottom:10px}
+input{width:100%;padding:8px;margin-top:6px;border-radius:4px;border:1px solid #ddd}
+.login-btn{width:100%;padding:10px;border-radius:6px;margin-top:10px;background:#0b74ff;color:#fff;border:none;cursor:pointer}
+.error{color:#b00020;margin-top:8px}
