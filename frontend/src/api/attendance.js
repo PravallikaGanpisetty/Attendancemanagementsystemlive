@@ -66,6 +66,10 @@ export async function getStudents() {
 }
 
 export async function addStudentToClass(classId, studentId) {
+  if (!classId || !studentId) {
+    throw new Error("Class ID and Student ID are required");
+  }
+  console.log("API Call - addStudentToClass:", { classId, studentId, url: `${API_BASE}/attendance/classes/${classId}/students` });
   const res = await fetch(`${API_BASE}/attendance/classes/${classId}/students`, {
     method: "POST",
     headers: getAuthHeaders(),
@@ -74,21 +78,40 @@ export async function addStudentToClass(classId, studentId) {
   });
   handleAuthError(res);
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Failed to add student" }));
-    throw new Error(error.message || "Failed to add student");
+    const errorText = await res.text();
+    let error;
+    try {
+      error = JSON.parse(errorText);
+    } catch {
+      error = { message: errorText || "Failed to add student" };
+    }
+    console.error("API Error Response:", { status: res.status, error });
+    throw new Error(error.message || `Failed to add student (${res.status})`);
   }
-  return res.json();
+  const result = await res.json();
+  console.log("API Success Response:", result);
+  return result;
 }
 
 export async function getClassStudents(classId) {
+  if (!classId) {
+    throw new Error("Class ID is required");
+  }
   const res = await fetch(`${API_BASE}/attendance/classes/${classId}/students`, {
     headers: getAuthHeaders(),
     credentials: 'include',
   });
   handleAuthError(res);
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Failed to fetch students" }));
-    throw new Error(error.message || "Failed to fetch students");
+    const errorText = await res.text();
+    let error;
+    try {
+      error = JSON.parse(errorText);
+    } catch {
+      error = { message: errorText || "Failed to fetch students" };
+    }
+    console.error("Error fetching class students:", { status: res.status, error, classId });
+    throw new Error(error.message || `Failed to fetch students (${res.status})`);
   }
   return res.json();
 }

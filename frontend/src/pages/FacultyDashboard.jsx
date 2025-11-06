@@ -46,18 +46,24 @@ export default function FacultyDashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    if (selectedClass) {
+    if (selectedClass && selectedClass._id) {
       loadClassStudents();
+    } else {
+      // Clear students if no class selected
+      setClassStudents([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClass]);
+  }, [selectedClass?._id]); // Only depend on class ID, not the whole object
 
   useEffect(() => {
-    if (selectedClass && classStudents.length > 0) {
+    if (selectedClass && selectedClass._id && classStudents.length > 0) {
       loadAttendanceForDate(classStudents);
+    } else if (selectedClass && selectedClass._id && classStudents.length === 0) {
+      // If class is selected but no students, clear attendance records
+      setAttendanceRecords({});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attendanceDate, selectedClass, classStudents.length]);
+  }, [attendanceDate, selectedClass?._id, classStudents.length]);
 
   async function loadData() {
     try {
@@ -83,7 +89,14 @@ export default function FacultyDashboard() {
       // Load existing attendance for the date
       await loadAttendanceForDate(data);
     } catch (err) {
+      console.error("Error loading class students:", err);
+      // Don't show error if it's auth-related (will redirect automatically)
+      if (err.message && err.message.includes("Session expired")) {
+        return; // handleAuthError already redirected
+      }
       setError(err.message || "Failed to load students");
+      // Set empty array on error to prevent UI issues
+      setClassStudents([]);
     }
   }
 
@@ -159,10 +172,19 @@ export default function FacultyDashboard() {
   }
 
   async function handleAddStudent(studentId) {
-    if (!selectedClass) return;
+    if (!selectedClass) {
+      setError("No class selected");
+      return;
+    }
+    if (!studentId) {
+      setError("No student selected");
+      return;
+    }
     try {
       setError("");
-      await addStudentToClass(selectedClass._id, studentId);
+      console.log("Adding student:", { classId: selectedClass._id, studentId });
+      const result = await addStudentToClass(selectedClass._id, studentId);
+      console.log("Student added successfully:", result);
       // Reload class students to show updated list
       await loadClassStudents();
       // Also reload classes list to update student count
@@ -170,7 +192,9 @@ export default function FacultyDashboard() {
       setShowAddStudent(false);
       alert("Student added successfully! The student will see this class in their dashboard.");
     } catch (err) {
+      console.error("Error adding student:", err);
       setError(err.message || "Failed to add student");
+      alert(`Error: ${err.message || "Failed to add student"}`);
     }
   }
 
@@ -523,22 +547,38 @@ export default function FacultyDashboard() {
                 <div className="modal" onClick={(e) => e.stopPropagation()}>
                   <h3>Add Student to Class</h3>
                   <div className="students-list">
-                    {students
-                      .filter(
-                        (s) => s && s._id && !classStudents.some((cs) => cs && cs._id === s._id)
-                      )
-                      .map((student, index) => {
-                        if (!student || !student._id) return null;
-                        return (
-                        <div
-                          key={student._id || `student-${index}`}
-                          className="student-item"
-                          onClick={() => handleAddStudent(student._id)}
-                        >
-                          {student.name || "N/A"} ({student.email || "N/A"})
-                        </div>
-                        );
-                      })}
+                    {students.length === 0 ? (
+                      <p>No students available to add.</p>
+                    ) : (
+                      students
+                        .filter((s) => {
+                          if (!s) return false;
+                          const studentId = s._id || s.id;
+                          if (!studentId) return false;
+                          // Check if student is already in the class
+                          const alreadyInClass = classStudents.some((cs) => {
+                            const classStudentId = cs._id || cs.id;
+                            return classStudentId && classStudentId.toString() === studentId.toString();
+                          });
+                          return !alreadyInClass;
+                        })
+                        .map((student, index) => {
+                          const studentId = student._id || student.id;
+                          if (!studentId) return null;
+                          return (
+                            <div
+                              key={studentId || `student-${index}`}
+                              className="student-item"
+                              onClick={() => {
+                                console.log("Student clicked:", { student, studentId });
+                                handleAddStudent(studentId);
+                              }}
+                            >
+                              {student.name || "N/A"} ({student.email || "N/A"})
+                            </div>
+                          );
+                        })
+                    )}
                   </div>
                   <button
                     onClick={() => setShowAddStudent(false)}

@@ -194,9 +194,26 @@ router.get('/classes/:classId/students', verifyToken, async (req, res) => {
     if (!classDoc) {
       return res.status(404).json({ message: 'Class not found' });
     }
+    
+    // Faculty can see students in their own classes, students can see students in classes they're enrolled in
+    if (req.userRole === 'faculty') {
+      // Faculty can only see students in their own classes
+      if (classDoc.facultyId.toString() !== req.userId.toString()) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    } else if (req.userRole === 'student') {
+      // Students can only see students in classes they're enrolled in
+      const isEnrolled = classDoc.students.some(
+        studentId => studentId.toString() === req.userId.toString()
+      );
+      if (!isEnrolled) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+    
     res.json(classDoc.students);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching class students:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
