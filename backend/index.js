@@ -8,13 +8,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors({
-  origin: [
-    'http://localhost:5177', 
-    'http://localhost:5173', 
-    /^http:\/\/localhost:\d+$/,
-    'https://attendancemanagementbackend.onrender.com',
-    /^https:\/\/.*\.onrender\.com$/
-  ],
+  origin: true, // Allow all origins for production
   credentials: true,
 }));
 app.use(express.json());

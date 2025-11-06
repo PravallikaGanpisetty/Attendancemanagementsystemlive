@@ -2,16 +2,34 @@ const API_BASE = import.meta.env.VITE_API_BASE || "https://attendancemanagementb
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No authentication token found. Please log in again.");
+  }
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
 }
 
+// Helper function to handle 401 errors (session expired)
+function handleAuthError(res) {
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    // Redirect to login page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new Error("Session expired. Please log in again.");
+  }
+}
+
 export async function getClasses() {
   const res = await fetch(`${API_BASE}/attendance/classes`, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch classes" }));
     throw new Error(error.message || "Failed to fetch classes");
@@ -24,7 +42,9 @@ export async function createClass(classData) {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(classData),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to create class" }));
     throw new Error(error.message || "Failed to create class");
@@ -35,7 +55,9 @@ export async function createClass(classData) {
 export async function getStudents() {
   const res = await fetch(`${API_BASE}/attendance/students`, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch students" }));
     throw new Error(error.message || "Failed to fetch students");
@@ -48,7 +70,9 @@ export async function addStudentToClass(classId, studentId) {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({ studentId }),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to add student" }));
     throw new Error(error.message || "Failed to add student");
@@ -59,7 +83,9 @@ export async function addStudentToClass(classId, studentId) {
 export async function getClassStudents(classId) {
   const res = await fetch(`${API_BASE}/attendance/classes/${classId}/students`, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch students" }));
     throw new Error(error.message || "Failed to fetch students");
@@ -72,7 +98,9 @@ export async function markAttendance(classId, date, attendance) {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify({ classId, date, attendance }),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to mark attendance" }));
     throw new Error(error.message || "Failed to mark attendance");
@@ -83,7 +111,9 @@ export async function markAttendance(classId, date, attendance) {
 export async function getAttendanceByClassAndDate(classId, date) {
   const res = await fetch(`${API_BASE}/attendance/class/${classId}/date/${date}`, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch attendance" }));
     throw new Error(error.message || "Failed to fetch attendance");
@@ -94,7 +124,9 @@ export async function getAttendanceByClassAndDate(classId, date) {
 export async function getStudentAttendance(studentId) {
   const res = await fetch(`${API_BASE}/attendance/student/${studentId}`, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch attendance" }));
     throw new Error(error.message || "Failed to fetch attendance");
@@ -105,7 +137,9 @@ export async function getStudentAttendance(studentId) {
 export async function getStudentStats(studentId) {
   const res = await fetch(`${API_BASE}/attendance/student/${studentId}/stats`, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch stats" }));
     throw new Error(error.message || "Failed to fetch stats");
@@ -116,7 +150,9 @@ export async function getStudentStats(studentId) {
 export async function getStudentClasses(studentId) {
   const res = await fetch(`${API_BASE}/attendance/student/${studentId}/classes`, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch classes" }));
     throw new Error(error.message || "Failed to fetch classes");
@@ -128,7 +164,9 @@ export async function removeStudentFromClass(classId, studentId) {
   const res = await fetch(`${API_BASE}/attendance/classes/${classId}/students/${studentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to remove student" }));
     throw new Error(error.message || "Failed to remove student");
@@ -140,7 +178,9 @@ export async function deleteClass(classId) {
   const res = await fetch(`${API_BASE}/attendance/classes/${classId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to delete class" }));
     throw new Error(error.message || "Failed to delete class");
@@ -153,7 +193,9 @@ export async function updateAttendance(attendanceId, status, remarks) {
     method: "PUT",
     headers: getAuthHeaders(),
     body: JSON.stringify({ status, remarks }),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to update attendance" }));
     throw new Error(error.message || "Failed to update attendance");
@@ -165,7 +207,9 @@ export async function deleteAttendance(attendanceId) {
   const res = await fetch(`${API_BASE}/attendance/attendance/${attendanceId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to delete attendance" }));
     throw new Error(error.message || "Failed to delete attendance");
@@ -182,7 +226,9 @@ export async function getClassSummary(classId, startDate, endDate) {
   
   const res = await fetch(url, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch summary" }));
     throw new Error(error.message || "Failed to fetch summary");
@@ -200,7 +246,9 @@ export async function getStudentAttendanceByRange(studentId, startDate, endDate,
   
   const res = await fetch(url, {
     headers: getAuthHeaders(),
+    credentials: 'include',
   });
+  handleAuthError(res);
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Failed to fetch attendance" }));
     throw new Error(error.message || "Failed to fetch attendance");

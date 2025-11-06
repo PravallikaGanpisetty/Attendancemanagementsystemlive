@@ -5,6 +5,7 @@ export async function login({ role, email, password }) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ role, email, password }),
+    credentials: 'include',
   });
   const ct = res.headers.get('content-type') || '';
   if (!ct.includes('application/json')) {
@@ -21,6 +22,7 @@ export async function register({ name, role, email, password }) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, role, email, password }),
+    credentials: 'include',
   });
   const ct = res.headers.get('content-type') || '';
   if (!ct.includes('application/json')) {
