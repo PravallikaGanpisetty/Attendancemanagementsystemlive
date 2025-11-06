@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://attendancemanagementbackend.onrender.com/api";
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");

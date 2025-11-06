@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://attendancemanagementbackend.onrender.com/api";
 
 export async function login({ role, email, password }) {
   const res = await fetch(`${API_BASE}/auth/login`, {
